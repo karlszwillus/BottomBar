@@ -103,6 +103,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
 
     private BottomBarItemBase[] mItems;
     private HashMap<Integer, Integer> mColorMap;
+    private HashMap<Integer, Integer> mActiveIconColorMap;
     private HashMap<Integer, Object> mBadgeMap;
     private HashMap<Integer, Boolean> mBadgeStateMap;
 
@@ -502,9 +503,10 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
      * background color when the Tab is selected.
      *
      * @param tabPosition zero-based index for the tab.
-     * @param color       a hex color for the tab, such as 0xFF00FF00.
+     * @param backgroundColor       a hex color for the tab, such as 0xFF00FF00.
+     * @param activeIconColors       a hex color for the tab, such as 0xFF00FF00.
      */
-    public void mapColorForTab(int tabPosition, int color) {
+    public void mapColorForTab(int tabPosition, int backgroundColor, int activeIconColors) {
         if (mItems == null || mItems.length == 0) {
             throw new UnsupportedOperationException("You have no BottomBar Tabs set yet. " +
                     "Please set them first before calling the mapColorForTab method.");
@@ -517,15 +519,31 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
 
         if (mColorMap == null) {
             mColorMap = new HashMap<>();
+            mActiveIconColorMap = new HashMap<>();
         }
 
-        if (tabPosition == mCurrentTabPosition
-                && mCurrentBackgroundColor != color) {
-            mCurrentBackgroundColor = color;
-            mBackgroundView.setBackgroundColor(color);
+        if (tabPosition == mCurrentTabPosition) {
+            mCurrentBackgroundColor = backgroundColor;
+            mBackgroundView.setBackgroundColor(backgroundColor);
+            if (mBackgroundView.findViewById(R.id.bb_bottom_bar_icon) != null) {
+                ((ImageView) mBackgroundView.findViewById(R.id.bb_bottom_bar_icon))
+                        .setColorFilter(activeIconColors);
+                ((TextView) mBackgroundView.findViewById(R.id.bb_bottom_bar_title))
+                        .setTextColor(activeIconColors);
+            }
+
+            for (int i = 0; i < mItemContainer.getChildCount(); i++) {
+                View view = mItemContainer.getChildAt(i);
+                ImageView icon = (ImageView) view.findViewById(R.id.bb_bottom_bar_icon);
+                TextView text = (TextView) view.findViewById(R.id.bb_bottom_bar_title);
+
+                icon.setColorFilter(activeIconColors);
+                text.setTextColor(activeIconColors);
+            }
         }
 
-        mColorMap.put(tabPosition, color);
+        mColorMap.put(tabPosition, backgroundColor);
+        mActiveIconColorMap.put(tabPosition, activeIconColors);
     }
 
     /**
@@ -536,7 +554,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
      * @param color       a hex color for the tab, such as "#00FF000".
      */
     public void mapColorForTab(int tabPosition, String color) {
-        mapColorForTab(tabPosition, Color.parseColor(color));
+        mapColorForTab(tabPosition, Color.parseColor(color), 0);
     }
 
     /**
@@ -561,6 +579,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
 
             for (int i = 0; i < mItemContainer.getChildCount(); i++) {
                 View bottomBarTab = mItemContainer.getChildAt(i);
+
                 ((ImageView) bottomBarTab.findViewById(R.id.bb_bottom_bar_icon))
                         .setColorFilter(mWhiteColor);
 
@@ -868,7 +887,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
     private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         mContext = context;
 
-        mDarkBackgroundColor = ContextCompat.getColor(getContext(), R.color.bb_darkBackgroundColor);
+        // mDarkBackgroundColor = ContextCompat.getColor(getContext(), R.color.bb_darkBackgroundColor);
         mWhiteColor = ContextCompat.getColor(getContext(), R.color.white);
         mPrimaryColor = MiscUtils.getColor(getContext(), R.attr.colorPrimary);
         mInActiveColor = ContextCompat.getColor(getContext(), R.color.bb_inActiveBottomBarItemColor);
@@ -1209,9 +1228,11 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
                     title.setTypeface(mPendingTypeface);
                 }
             }
-
+            if (mActiveIconColorMap!= null) {
+                icon.setColorFilter(mActiveIconColorMap.get(mCurrentTabPosition));
+            }
             if (mIsDarkTheme || (!mIsTabletMode && mIsShiftingMode)) {
-                icon.setColorFilter(mWhiteColor);
+                // icon.setColorFilter(mWhiteColor);
             }
 
             if (bottomBarItemBase instanceof BottomBarTab) {
@@ -1311,11 +1332,14 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
         TextView title = (TextView) tab.findViewById(R.id.bb_bottom_bar_title);
 
         int tabPosition = findItemPosition(tab);
+        int activeColor = 0;
+        if (mActiveIconColorMap != null) {
+            activeColor = mActiveIconColorMap.get(tabPosition);
+        }
+        icon.setColorFilter(activeColor);
+        title.setTextColor(activeColor);
 
         if (!mIsShiftingMode || mIsTabletMode) {
-            int activeColor = mCustomActiveTabColor != 0 ?
-                    mCustomActiveTabColor : mPrimaryColor;
-            icon.setColorFilter(activeColor);
 
             if (title != null) {
                 title.setTextColor(activeColor);
@@ -1438,11 +1462,21 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
     }
 
     private void handleBackgroundColorChange(int tabPosition, View tab) {
-        if (mIsDarkTheme || !mIsShiftingMode || mIsTabletMode) return;
+        // if (mIsDarkTheme || !mIsShiftingMode || mIsTabletMode) return;
 
         if (mColorMap != null && mColorMap.containsKey(tabPosition)) {
             handleBackgroundColorChange(
                     tab, mColorMap.get(tabPosition));
+            for (int i = 0; i < mItemContainer.getChildCount(); i++) {
+                if (i != tabPosition) {
+                    View view = mItemContainer.getChildAt(i);
+                    ImageView icon = (ImageView) view.findViewById(R.id.bb_bottom_bar_icon);
+                    TextView text = (TextView) view.findViewById(R.id.bb_bottom_bar_title);
+
+                    icon.setColorFilter(mActiveIconColorMap.get(tabPosition));
+                    text.setTextColor(mActiveIconColorMap.get(tabPosition));
+                }
+            }
         } else {
             handleBackgroundColorChange(tab, mDefaultBackgroundColor);
         }
