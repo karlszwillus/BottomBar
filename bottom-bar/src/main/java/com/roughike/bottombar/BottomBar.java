@@ -361,6 +361,32 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
     }
 
     /**
+     * Only Select a tab at the specified position. Does not call the  {@see OnTabClickListener:onTabSelected} call back method on {@link OnTabClickListener}.
+     * Calls instead {@see OnTabClickListener:onMenuTabOnlySelected}
+     *
+     * @param position the position to select.
+     */
+    public void onlySelectTabAtPosition(int position, boolean animate) {
+
+        if (mItems == null || mItems.length == 0) {
+            throw new UnsupportedOperationException("Can't select tab at " +
+                    "position " + position + ". This BottomBar has no items set yet.");
+        } else if (position > mItems.length - 1 || position < 0) {
+            throw new IndexOutOfBoundsException("Can't select tab at position " +
+                    position + ". This BottomBar has no items at that position.");
+        }
+
+        View oldTab = mItemContainer.findViewWithTag(TAG_BOTTOM_BAR_VIEW_ACTIVE);
+        View newTab = mItemContainer.getChildAt(position);
+
+        unselectTab(oldTab, animate);
+        selectTab(newTab, animate);
+
+        updateSelectedTab(position, false); // call other call back method
+        shiftingMagic(oldTab, newTab, false);
+    }
+
+    /**
      * Select a tab at the specified position.
      *
      * @param position the position to select.
@@ -380,7 +406,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
         unselectTab(oldTab, animate);
         selectTab(newTab, animate);
 
-        updateSelectedTab(position);
+        updateSelectedTab(position, true); // TODO: dirk
         shiftingMagic(oldTab, newTab, false);
     }
 
@@ -502,9 +528,9 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
      * Map a background color for a Tab, that changes the whole BottomBar
      * background color when the Tab is selected.
      *
-     * @param tabPosition zero-based index for the tab.
-     * @param backgroundColor       a hex color for the tab, such as 0xFF00FF00.
-     * @param activeIconColors       a hex color for the tab, such as 0xFF00FF00.
+     * @param tabPosition      zero-based index for the tab.
+     * @param backgroundColor  a hex color for the tab, such as 0xFF00FF00.
+     * @param activeIconColors a hex color for the tab, such as 0xFF00FF00.
      */
     public void mapColorForTab(int tabPosition, int backgroundColor, int activeIconColors) {
         if (mItems == null || mItems.length == 0) {
@@ -1046,7 +1072,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
 
             shiftingMagic(oldTab, v, true);
         }
-        updateSelectedTab(findItemPosition(v));
+        updateSelectedTab(findItemPosition(v), true);
     }
 
     private void shiftingMagic(View oldTab, View newTab, boolean animate) {
@@ -1071,7 +1097,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
         }
     }
 
-    private void updateSelectedTab(int newPosition) {
+    private void updateSelectedTab(int newPosition, boolean clicked) {
         final boolean notifyMenuListener = mMenuListener != null && mItems instanceof BottomBarTab[];
         final boolean notifyRegularListener = mListener != null;
 
@@ -1084,7 +1110,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
             }
 
             if (notifyMenuListener) {
-                notifyMenuListener(mMenuListener, false, ((BottomBarTab) mItems[mCurrentTabPosition]).id);
+                notifyMenuListener(mMenuListener, false, ((BottomBarTab) mItems[mCurrentTabPosition]).id, clicked);
             }
 
             updateCurrentFragment();
@@ -1094,7 +1120,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
             }
 
             if (notifyMenuListener) {
-                notifyMenuListener(mMenuListener, true, ((BottomBarTab) mItems[mCurrentTabPosition]).id);
+                notifyMenuListener(mMenuListener, true, ((BottomBarTab) mItems[mCurrentTabPosition]).id, clicked);
             }
         }
     }
@@ -1119,12 +1145,16 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
     }
 
     @SuppressWarnings("deprecation")
-    private void notifyMenuListener(Object listener, boolean isReselection, @IdRes int menuItemId) {
+    private void notifyMenuListener(Object listener, boolean isReselection, @IdRes int menuItemId, boolean clicked) {
         if (listener instanceof OnMenuTabClickListener) {
             OnMenuTabClickListener onMenuTabClickListener = (OnMenuTabClickListener) listener;
 
             if (!isReselection) {
-                onMenuTabClickListener.onMenuTabSelected(menuItemId);
+                if (clicked) {
+                    onMenuTabClickListener.onMenuTabSelected(menuItemId);
+                } else {
+                    onMenuTabClickListener.onMenuTabOnlySelected(menuItemId);
+                }
             } else {
                 onMenuTabClickListener.onMenuTabReSelected(menuItemId);
             }
@@ -1228,7 +1258,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
                     title.setTypeface(mPendingTypeface);
                 }
             }
-            if (mActiveIconColorMap!= null) {
+            if (mActiveIconColorMap != null) {
                 icon.setColorFilter(mActiveIconColorMap.get(mCurrentTabPosition));
             }
             if (mIsDarkTheme || (!mIsTabletMode && mIsShiftingMode)) {

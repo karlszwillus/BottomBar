@@ -32,6 +32,19 @@ public interface OnMenuTabClickListener {
     void onMenuTabSelected(@IdRes int menuItemId);
 
     /**
+     * The method being called when menu tab was only selected from code but not clicked {@link BottomBarTab}.
+     * <p>
+     * This listener is fired for the first time after the items have been set and
+     * also after a configuration change, such as when screen orientation changes
+     * from portrait to landscape.
+     *
+     * @param menuItemId the new visible tab's id that
+     *                   was assigned in the menu xml resource file.
+     */
+    void onMenuTabOnlySelected(@IdRes int menuItemId);
+
+
+    /**
      * The method being called when currently visible {@link BottomBarTab} is
      * reselected. Use this method for scrolling to the top of your content,
      * as recommended by the Material Design spec
