@@ -104,6 +104,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
     private BottomBarItemBase[] mItems;
     private HashMap<Integer, Integer> mColorMap;
     private HashMap<Integer, Integer> mActiveIconColorMap;
+    private HashMap<Integer, Boolean> mUseWhiteIconsList;
     private HashMap<Integer, Object> mBadgeMap;
     private HashMap<Integer, Boolean> mBadgeStateMap;
 
@@ -532,7 +533,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
      * @param backgroundColor  a hex color for the tab, such as 0xFF00FF00.
      * @param activeIconColors a hex color for the tab, such as 0xFF00FF00.
      */
-    public void mapColorForTab(int tabPosition, int backgroundColor, int activeIconColors) {
+    public void mapColorForTab(int tabPosition, int backgroundColor, int activeIconColors, boolean useWhiteIcon) {
         if (mItems == null || mItems.length == 0) {
             throw new UnsupportedOperationException("You have no BottomBar Tabs set yet. " +
                     "Please set them first before calling the mapColorForTab method.");
@@ -546,14 +547,14 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
         if (mColorMap == null) {
             mColorMap = new HashMap<>();
             mActiveIconColorMap = new HashMap<>();
+            mUseWhiteIconsList = new HashMap<>();
         }
 
         if (tabPosition == mCurrentTabPosition) {
             mCurrentBackgroundColor = backgroundColor;
             mBackgroundView.setBackgroundColor(backgroundColor);
-            if (mBackgroundView.findViewById(R.id.bb_bottom_bar_icon) != null) {
-                ((ImageView) mBackgroundView.findViewById(R.id.bb_bottom_bar_icon))
-                        .setColorFilter(activeIconColors);
+            if (mBackgroundView.findViewById(R.id.bb_bottom_bar_icon) != null){
+                mBackgroundView.findViewById(R.id.bb_bottom_bar_icon).setActivated(useWhiteIcon);
                 ((TextView) mBackgroundView.findViewById(R.id.bb_bottom_bar_title))
                         .setTextColor(activeIconColors);
             }
@@ -563,13 +564,14 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
                 ImageView icon = (ImageView) view.findViewById(R.id.bb_bottom_bar_icon);
                 TextView text = (TextView) view.findViewById(R.id.bb_bottom_bar_title);
 
-                icon.setColorFilter(activeIconColors);
+                icon.setActivated(useWhiteIcon);
                 text.setTextColor(activeIconColors);
             }
         }
 
         mColorMap.put(tabPosition, backgroundColor);
         mActiveIconColorMap.put(tabPosition, activeIconColors);
+        mUseWhiteIconsList.put(tabPosition, useWhiteIcon);
     }
 
     /**
@@ -580,7 +582,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
      * @param color       a hex color for the tab, such as "#00FF000".
      */
     public void mapColorForTab(int tabPosition, String color) {
-        mapColorForTab(tabPosition, Color.parseColor(color), 0);
+        mapColorForTab(tabPosition, Color.parseColor(color), 0, false);
     }
 
     /**
@@ -1365,15 +1367,10 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
         int activeColor = 0;
         if (mActiveIconColorMap != null) {
             activeColor = mActiveIconColorMap.get(tabPosition);
+            icon.setActivated(mUseWhiteIconsList.get(tabPosition));
         }
-        icon.setColorFilter(activeColor);
-        title.setTextColor(activeColor);
-
-        if (!mIsShiftingMode || mIsTabletMode) {
-
-            if (title != null) {
-                title.setTextColor(activeColor);
-            }
+        if (title != null) {
+            title.setTextColor(activeColor);
         }
 
         if (mIsDarkTheme) {
@@ -1432,6 +1429,8 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
 
         ImageView icon = (ImageView) tab.findViewById(R.id.bb_bottom_bar_icon);
         TextView title = (TextView) tab.findViewById(R.id.bb_bottom_bar_title);
+
+        icon.setSelected(false);
 
         if (!mIsShiftingMode || mIsTabletMode) {
             int inActiveColor = mIsDarkTheme ? mWhiteColor : mInActiveColor;
@@ -1502,8 +1501,8 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
                     View view = mItemContainer.getChildAt(i);
                     ImageView icon = (ImageView) view.findViewById(R.id.bb_bottom_bar_icon);
                     TextView text = (TextView) view.findViewById(R.id.bb_bottom_bar_title);
-
-                    icon.setColorFilter(mActiveIconColorMap.get(tabPosition));
+                    icon.setActivated(mUseWhiteIconsList.get(tabPosition));
+                    // icon.setColorFilter(mActiveIconColorMap.get(tabPosition));
                     text.setTextColor(mActiveIconColorMap.get(tabPosition));
                 }
             }
