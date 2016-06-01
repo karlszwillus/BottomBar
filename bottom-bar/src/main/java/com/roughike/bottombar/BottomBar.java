@@ -6,7 +6,12 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.Typeface;
+import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
@@ -36,6 +41,8 @@ import com.roughike.bottombar.scrollsweetness.BottomNavigationBehavior;
 
 import java.util.HashMap;
 
+import static android.graphics.Color.RED;
+
 /*
  * BottomBar library for Android
  * Copyright (c) 2016 Iiro Krankka (http://github.com/roughike).
@@ -60,6 +67,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
     private static final String TAG_BOTTOM_BAR_VIEW_INACTIVE = "BOTTOM_BAR_VIEW_INACTIVE";
     private static final String TAG_BOTTOM_BAR_VIEW_ACTIVE = "BOTTOM_BAR_VIEW_ACTIVE";
     private static final String TAG_BADGE = "BOTTOMBAR_BADGE_";
+    public static final int NO_ANIMATION = -1;
 
     private Context mContext;
     private boolean mIsComingFromRestoredState;
@@ -120,6 +128,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
     private boolean mDrawBehindNavBar = true;
     private boolean mUseTopOffset = true;
     private boolean mUseOnlyStatusBarOffset;
+    private int mAnimationActive = NO_ANIMATION;
 
     private int mPendingTextAppearance = -1;
     private Typeface mPendingTypeface;
@@ -1490,6 +1499,24 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
         }
     }
 
+    public void startAnimatedDrawable(AnimationDrawable drawable, int tabPosition) {
+        mAnimationActive = tabPosition;
+        View view = mItemContainer.getChildAt(tabPosition);
+        ImageView icon = (ImageView) view.findViewById(R.id.bb_bottom_bar_icon);
+        icon.setImageDrawable(null);
+        icon.setBackgroundDrawable(drawable);
+        drawable.start();
+    }
+
+    public void stopAnimatedDrawable(Drawable drawable, int tabPosition) {
+        mAnimationActive = NO_ANIMATION;
+        View view = mItemContainer.getChildAt(tabPosition);
+        ImageView icon = (ImageView) view.findViewById(R.id.bb_bottom_bar_icon);
+        ((AnimationDrawable)icon.getBackground()).stop();
+        icon.setBackgroundDrawable(null);
+        icon.setImageDrawable(drawable);
+    }
+
     private void handleBackgroundColorChange(int tabPosition, View tab) {
         // if (mIsDarkTheme || !mIsShiftingMode || mIsTabletMode) return;
 
@@ -1497,13 +1524,23 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
             handleBackgroundColorChange(
                     tab, mColorMap.get(tabPosition));
             for (int i = 0; i < mItemContainer.getChildCount(); i++) {
+                View view = mItemContainer.getChildAt(i);
+                ImageView icon = (ImageView) view.findViewById(R.id.bb_bottom_bar_icon);
                 if (i != tabPosition) {
-                    View view = mItemContainer.getChildAt(i);
-                    ImageView icon = (ImageView) view.findViewById(R.id.bb_bottom_bar_icon);
                     TextView text = (TextView) view.findViewById(R.id.bb_bottom_bar_title);
                     icon.setActivated(mUseWhiteIconsList.get(tabPosition));
                     // icon.setColorFilter(mActiveIconColorMap.get(tabPosition));
                     text.setTextColor(mActiveIconColorMap.get(tabPosition));
+                }
+                if (i == mAnimationActive) {
+                    AnimationDrawable animationDrawable = (AnimationDrawable) icon.getBackground();
+                    animationDrawable.mutate();
+                    if (!mUseWhiteIconsList.get(tabPosition)) {
+                        animationDrawable.setColorFilter(new PorterDuffColorFilter(Color.BLACK, PorterDuff.Mode.SRC_ATOP));
+                    }
+                    else {
+                        animationDrawable.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP));
+                    }
                 }
             }
         } else {
