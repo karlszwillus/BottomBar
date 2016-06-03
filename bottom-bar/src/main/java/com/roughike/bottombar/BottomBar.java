@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.graphics.ColorFilter;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Typeface;
@@ -16,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.support.annotation.MenuRes;
+import android.support.annotation.NonNull;
 import android.support.annotation.StyleRes;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.content.ContextCompat;
@@ -40,8 +40,6 @@ import android.widget.Toast;
 import com.roughike.bottombar.scrollsweetness.BottomNavigationBehavior;
 
 import java.util.HashMap;
-
-import static android.graphics.Color.RED;
 
 /*
  * BottomBar library for Android
@@ -562,7 +560,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
         if (tabPosition == mCurrentTabPosition) {
             mCurrentBackgroundColor = backgroundColor;
             mBackgroundView.setBackgroundColor(backgroundColor);
-            if (mBackgroundView.findViewById(R.id.bb_bottom_bar_icon) != null){
+            if (mBackgroundView.findViewById(R.id.bb_bottom_bar_icon) != null) {
                 mBackgroundView.findViewById(R.id.bb_bottom_bar_icon).setActivated(useWhiteIcon);
                 ((TextView) mBackgroundView.findViewById(R.id.bb_bottom_bar_title))
                         .setTextColor(activeIconColors);
@@ -1499,7 +1497,8 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
         }
     }
 
-    public void startAnimatedDrawable(AnimationDrawable drawable, int tabPosition) {
+    @SuppressWarnings("depricated")
+    public void startAnimatedDrawable(@NonNull AnimationDrawable drawable, int tabPosition) {
         mAnimationActive = tabPosition;
         View view = mItemContainer.getChildAt(tabPosition);
         ImageView icon = (ImageView) view.findViewById(R.id.bb_bottom_bar_icon);
@@ -1508,11 +1507,15 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
         drawable.start();
     }
 
-    public void stopAnimatedDrawable(Drawable drawable, int tabPosition) {
+    @SuppressWarnings("depricated")
+    public void stopAnimatedDrawable(@NonNull Drawable drawable, int tabPosition) {
         mAnimationActive = NO_ANIMATION;
         View view = mItemContainer.getChildAt(tabPosition);
         ImageView icon = (ImageView) view.findViewById(R.id.bb_bottom_bar_icon);
-        ((AnimationDrawable)icon.getBackground()).stop();
+
+        if (icon != null && icon.getBackground() instanceof AnimationDrawable) {
+            ((AnimationDrawable) icon.getBackground()).stop();
+        }
         icon.setBackgroundDrawable(null);
         icon.setImageDrawable(drawable);
     }
@@ -1532,13 +1535,14 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
                     // icon.setColorFilter(mActiveIconColorMap.get(tabPosition));
                     text.setTextColor(mActiveIconColorMap.get(tabPosition));
                 }
-                if (i == mAnimationActive) {
+
+                // TODO: do we need handling for icon.getBackground() == null ?
+                if (i == mAnimationActive && icon.getBackground() != null) {
                     AnimationDrawable animationDrawable = (AnimationDrawable) icon.getBackground();
                     animationDrawable.mutate();
                     if (!mUseWhiteIconsList.get(tabPosition)) {
                         animationDrawable.setColorFilter(new PorterDuffColorFilter(Color.BLACK, PorterDuff.Mode.SRC_ATOP));
-                    }
-                    else {
+                    } else {
                         animationDrawable.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP));
                     }
                 }
