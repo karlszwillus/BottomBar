@@ -1503,6 +1503,10 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
         View view = mItemContainer.getChildAt(tabPosition);
         ImageView icon = (ImageView) view.findViewById(R.id.bb_bottom_bar_icon);
         icon.setImageDrawable(null);
+        if (!mUseWhiteIconsList.get(mCurrentTabPosition)) {
+            drawable.mutate();
+            drawable.setColorFilter(new PorterDuffColorFilter(Color.BLACK, PorterDuff.Mode.SRC_ATOP));
+        }
         icon.setBackgroundDrawable(drawable);
         drawable.start();
     }
