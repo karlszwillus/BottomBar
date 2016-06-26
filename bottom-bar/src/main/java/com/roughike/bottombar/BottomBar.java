@@ -1384,6 +1384,9 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
         if (mActiveIconColorMap != null) {
             activeColor = mActiveIconColorMap.get(tabPosition);
             icon.setActivated(mUseWhiteIconsList.get(tabPosition));
+            if (mIsTabletMode) {
+                icon.setAlpha(1.0f);
+            }
         }
         if (title != null) {
             title.setTextColor(activeColor);
@@ -1448,7 +1451,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
 
         icon.setSelected(false);
 
-        if (!mIsShiftingMode || mIsTabletMode) {
+        if (!mIsShiftingMode) {
             int inActiveColor = mIsDarkTheme ? mWhiteColor : mInActiveColor;
             icon.setColorFilter(inActiveColor);
 
@@ -1457,7 +1460,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
             }
         }
 
-        if (mIsDarkTheme) {
+        if (mIsDarkTheme || mIsTabletMode) {
             if (title != null) {
                 ViewCompat.setAlpha(title, 0.6f);
             }
@@ -1488,7 +1491,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
                     .translationY(0)
                     .start();
 
-            if (mIsShiftingMode) {
+            if (mIsShiftingMode || mIsTabletMode) {
                 ViewCompat.animate(icon)
                         .setDuration(ANIMATION_DURATION)
                         .alpha(0.6f)
@@ -1499,7 +1502,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
             ViewCompat.setScaleY(title, scale);
             ViewCompat.setTranslationY(tab, 0);
 
-            if (mIsShiftingMode) {
+            if (mIsShiftingMode || mIsTabletMode) {
                 ViewCompat.setAlpha(icon, 0.6f);
                 ViewCompat.setAlpha(title, 0);
             }
