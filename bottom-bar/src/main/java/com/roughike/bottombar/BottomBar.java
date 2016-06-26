@@ -549,12 +549,18 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
                     "index " + tabPosition + ". You have no BottomBar Tabs at that position.");
         }
 
-        if (mIsDarkTheme || !mIsShiftingMode || mIsTabletMode) return;
+        if (mIsDarkTheme || !mIsShiftingMode) return;
 
         if (mColorMap == null) {
             mColorMap = new HashMap<>();
             mActiveIconColorMap = new HashMap<>();
             mUseWhiteIconsList = new HashMap<>();
+        }
+
+        if (mIsTabletMode) {
+            backgroundColor = Color.BLACK;
+            useWhiteIcon = true;
+            activeIconColors = Color.WHITE;
         }
 
         if (tabPosition == mCurrentTabPosition) {
@@ -572,7 +578,10 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
                 TextView text = (TextView) view.findViewById(R.id.bb_bottom_bar_title);
 
                 icon.setActivated(useWhiteIcon);
-                text.setTextColor(activeIconColors);
+                // It is null on tablet
+                if (text != null) {
+                    text.setTextColor(activeIconColors);
+                }
             }
         }
 
@@ -1380,13 +1389,13 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
             title.setTextColor(activeColor);
         }
 
-        if (mIsDarkTheme) {
+        /*if (mIsDarkTheme) {
             if (title != null) {
                 ViewCompat.setAlpha(title, 1.0f);
             }
 
             ViewCompat.setAlpha(icon, 1.0f);
-        }
+        }*/
 
         if (title == null) {
             return;
@@ -1525,7 +1534,7 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
     }
 
     private void handleBackgroundColorChange(int tabPosition, View tab) {
-        // if (mIsDarkTheme || !mIsShiftingMode || mIsTabletMode) return;
+        if (mIsDarkTheme || !mIsShiftingMode) return;
 
         if (mColorMap != null && mColorMap.containsKey(tabPosition)) {
             handleBackgroundColorChange(
@@ -1537,7 +1546,9 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
                     TextView text = (TextView) view.findViewById(R.id.bb_bottom_bar_title);
                     icon.setActivated(mUseWhiteIconsList.get(tabPosition));
                     // icon.setColorFilter(mActiveIconColorMap.get(tabPosition));
-                    text.setTextColor(mActiveIconColorMap.get(tabPosition));
+                    if (text != null) {
+                        text.setTextColor(mActiveIconColorMap.get(tabPosition));
+                    }
                 }
 
                 // TODO: do we need handling for icon.getBackground() == null ?
