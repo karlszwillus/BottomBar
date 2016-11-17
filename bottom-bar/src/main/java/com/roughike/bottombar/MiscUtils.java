@@ -6,7 +6,6 @@ import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Build;
 import android.support.annotation.MenuRes;
@@ -20,7 +19,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
@@ -222,8 +220,9 @@ class MiscUtils {
      * @return true if the night mode is enabled, otherwise false.
      */
     protected static boolean isNightMode(Context context) {
-        int currentNightMode = context.getResources().getConfiguration().uiMode
+        return false;
+        /*int currentNightMode = context.getResources().getConfiguration().uiMode
                 & Configuration.UI_MODE_NIGHT_MASK;
-        return currentNightMode == Configuration.UI_MODE_NIGHT_YES;
+        return currentNightMode == Configuration.UI_MODE_NIGHT_YES;*/
     }
 }
