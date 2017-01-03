@@ -269,7 +269,6 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
      * Deprecated.
      * <p/>
      * Use either {@link #setItems(BottomBarTab...)} or
-     * {@link #setItemsFromMenu(int, OnMenuTabClickListener)} and add a listener using
      * {@link #setOnTabClickListener(OnTabClickListener)} to handle tab changes by yourself.
      * <p/>
      * Set tabs and fragments for this BottomBar. When setting more than 3 items,
@@ -319,7 +318,6 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
     }
 
     /**
-     * Deprecated. Use {@link #setItemsFromMenu(int, OnMenuTabClickListener)} instead.
      */
     @Deprecated
     public void setItemsFromMenu(@MenuRes int menuRes, OnMenuTabSelectedListener listener) {
@@ -335,16 +333,12 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
      * @param menuRes  the menu resource to inflate items from.
      * @param listener listener for tab change events.
      */
-    public void setItemsFromMenu(@MenuRes int menuRes, OnMenuTabClickListener listener) {
+
+    public void setItemsFromMenu(@MenuRes int menuRes, OnMenuTabClickListener listener, boolean autoSelect) {
         clearItems();
         mItems = MiscUtils.inflateMenuFromResource((Activity) getContext(), menuRes);
         mMenuListener = listener;
         updateItems(mItems);
-
-        if (mItems != null && mItems.length > 0
-                && mItems instanceof BottomBarTab[]) {
-            listener.onMenuTabSelected(((BottomBarTab) mItems[mCurrentTabPosition]).id);
-        }
     }
 
     /**
@@ -362,10 +356,6 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
      */
     public void setOnTabClickListener(OnTabClickListener listener) {
         mListener = listener;
-
-        if (mItems != null && mItems.length > 0) {
-            listener.onTabSelected(mCurrentTabPosition);
-        }
     }
 
     /**
@@ -375,6 +365,10 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
      * @param position the position to select.
      */
     public void onlySelectTabAtPosition(int position, boolean animate) {
+
+        if (position == mCurrentTabPosition) {
+            return;
+        }
 
         if (mItems == null || mItems.length == 0) {
             throw new UnsupportedOperationException("Can't select tab at " +
@@ -400,6 +394,11 @@ public class BottomBar extends FrameLayout implements View.OnClickListener, View
      * @param position the position to select.
      */
     public void selectTabAtPosition(int position, boolean animate) {
+
+        if (position == mCurrentTabPosition) {
+            return;
+        }
+
         if (mItems == null || mItems.length == 0) {
             throw new UnsupportedOperationException("Can't select tab at " +
                     "position " + position + ". This BottomBar has no items set yet.");
